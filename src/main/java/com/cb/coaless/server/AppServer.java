@@ -1,9 +1,9 @@
 package com.cb.coaless.server;
 
-import com.cb.coaless.controller.ArticleController;
+import com.cb.coaless.controller.TaskController;
 import com.cb.coaless.db.JPAUtil;
-import com.cb.coaless.model.Article;
-import com.cb.coaless.repo.ArticleRepository;
+import com.cb.coaless.model.Task;
+import com.cb.coaless.repo.TaskRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpExchange;
@@ -13,6 +13,8 @@ import jakarta.persistence.EntityManager;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,26 +28,28 @@ public class AppServer {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.setExecutor(java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor());
 
-        server.createContext("/api/articles", this::articlesHandler);
+        server.createContext("/api/tasks", this::tasksHandler);
         server.createContext("/", this::spaHandler);
 
         server.start();
     }
 
-    private void articlesHandler(HttpExchange exchange) throws IOException {
+    private void tasksHandler(HttpExchange exchange) throws IOException {
 
         EntityManager em = JPAUtil.createEntityManager();
         try {
 
-            ArticleRepository repo = new ArticleRepository(em);
-            ArticleController controller = new ArticleController(repo);
+            TaskRepository repo = new TaskRepository(em);
+            TaskController controller = new TaskController(repo);
 
-            // Seed if empty
             if (repo.findAll().isEmpty()) {
-                Article article = new Article();
-                article.setTitle("Test Case");
-                article.setContent("Test case description");
-                repo.save(article);
+                Task task = new Task();
+                task.setTitle("Test Task");
+                task.setContent("Test task description");
+                task.setStatus(Task.Status.TODO);
+                LocalDate localDue = LocalDate.now().plusDays(7);
+                task.setDueDate(Date.valueOf(localDue));
+                repo.save(task);
             }
 
             String method = exchange.getRequestMethod();
@@ -54,47 +58,47 @@ public class AppServer {
             int status = 200;
 
             try {
-                if ("GET".equalsIgnoreCase(method) && path.equals("/api/articles")) {
-                    List<Article> articles = controller.getAll();
-                    response = mapper.writeValueAsString(articles);
+                if ("GET".equalsIgnoreCase(method) && path.equals("/api/tasks")) {
+                    List<Task> tasks = controller.getAll();
+                    response = mapper.writeValueAsString(tasks);
 
-                } else if ("POST".equalsIgnoreCase(method) && path.equals("/api/articles")) {
+                } else if ("POST".equalsIgnoreCase(method) && path.equals("/api/tasks")) {
                     InputStream is = exchange.getRequestBody();
-                    Article article = mapper.readValue(is, Article.class);
+                    Task task = mapper.readValue(is, Task.class);
 
-                    if (article.getTitle() == null || article.getTitle().isBlank()) {
+                    if (task.getTitle() == null || task.getTitle().isBlank()) {
                         sendJsonError(exchange, 400, "Title is required");
                         return;
                     }
 
-                    controller.create(article);
-                    response = mapper.writeValueAsString(article);
+                    controller.create(task);
+                    response = mapper.writeValueAsString(task);
                     status = 201;
 
                 } else if (("PUT".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method))
-                        && path.matches("/api/articles/\\d+")) {
+                        && path.matches("/api/tasks/\\d+")) {
 
                     Long id = Long.parseLong(path.split("/")[3]);
 
                     if ("PUT".equalsIgnoreCase(method)) {
                         InputStream is = exchange.getRequestBody();
-                        Article updated = mapper.readValue(is, Article.class);
+                        Task updated = mapper.readValue(is, Task.class);
 
-                        Article result = controller.update(id, updated);
+                        Task result = controller.update(id, updated);
                         if (result == null) {
-                            sendJsonError(exchange, 404, "Article not found");
+                            sendJsonError(exchange, 404, "Task not found");
                             return;
                         } else {
                             response = mapper.writeValueAsString(result);
                         }
 
                     } else { // DELETE
-                        Article exists = controller.getAll().stream()
+                        Task exists = controller.getAll().stream()
                                 .filter(a -> a.getId().equals(id))
                                 .findFirst().orElse(null);
 
                         if (exists == null) {
-                            sendJsonError(exchange, 404, "Article not found");
+                            sendJsonError(exchange, 404, "Task not found");
                             return;
                         }
 

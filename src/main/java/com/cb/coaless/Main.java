@@ -20,9 +20,9 @@ simple-server/
     │   ├── Main.java
     │   ├── server/AppServer.java
     │   ├── db/JPAUtil.java
-    │   ├── model/Article.java
-    │   ├── repo/ArticleRepository.java
-    │   ├── controller/ArticleController.java
+    │   ├── model/Task.java
+    │   ├── repo/TaskRepository.java
+    │   ├── controller/TaskController.java
     │   └── template/TemplateEngine.java
     └── resources/
         ├── META-INF/persistence.xml

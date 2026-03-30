@@ -1,6 +1,6 @@
 package com.cb.coaless.db;
 
-import com.cb.coaless.model.Article;
+import com.cb.coaless.model.Task;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManager;
@@ -27,8 +27,8 @@ public class JPAUtil {
             try {
 
                 HikariConfig hikariConfig = new HikariConfig();
-                //hikariConfig.setJdbcUrl("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1"); // in-memory H2
-                hikariConfig.setJdbcUrl("jdbc:h2:file:./data/testdb;AUTO_SERVER=TRUE");
+                hikariConfig.setJdbcUrl("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1"); // in-memory H2
+                //hikariConfig.setJdbcUrl("jdbc:h2:file:./data/testdb;AUTO_SERVER=TRUE");
                 hikariConfig.setUsername("sa");
                 hikariConfig.setPassword("");
                 hikariConfig.setMaximumPoolSize(10);
@@ -52,7 +52,7 @@ public class JPAUtil {
                         .build();
 
                 sessionFactory = new MetadataSources(registry)
-                        .addAnnotatedClass(Article.class)
+                        .addAnnotatedClass(Task.class)
                         .buildMetadata()
                         .buildSessionFactory();
 

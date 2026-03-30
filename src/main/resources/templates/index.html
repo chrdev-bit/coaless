@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Case Articles SPA</title>
+    <title>Tasks SPA</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -10,9 +10,7 @@
             background: #f9f9f9;
             color: #333;
         }
-        h1, h3 {
-            color: #444;
-        }
+        h1, h3 { color: #444; }
         .container {
             max-width: 800px;
             margin: auto;
@@ -21,7 +19,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .article {
+        .task {
             display: flex;
             flex-direction: column;
             gap: 5px;
@@ -31,14 +29,14 @@
             border-radius: 6px;
             background: #fafafa;
         }
-        .article input {
+        .task input, .task select {
             padding: 8px;
             border-radius: 4px;
             border: 1px solid #ccc;
             width: 100%;
             box-sizing: border-box;
         }
-        .article button {
+        .task button {
             padding: 6px 12px;
             margin-top: 5px;
             border: none;
@@ -49,16 +47,14 @@
             font-weight: bold;
             transition: background 0.2s;
         }
-        .article button:hover {
-            background: #0056b3;
-        }
-        #createArticle input {
+        .task button:hover { background: #0056b3; }
+        #createTask input, #createTask select {
             margin-right: 5px;
             padding: 8px;
             border-radius: 4px;
             border: 1px solid #ccc;
         }
-        #createArticle button {
+        #createTask button {
             padding: 8px 16px;
             border: none;
             border-radius: 4px;
@@ -68,130 +64,141 @@
             font-weight: bold;
             transition: background 0.2s;
         }
-        #createArticle button:hover {
-            background: #1e7e34;
-        }
-        .error {
-            color: red;
-            font-size: 0.85em;
-            margin-top: 2px;
-        }
+        #createTask button:hover { background: #1e7e34; }
+        .error { color: red; font-size: 0.85em; margin-top: 2px; }
+        .button-group { display: flex; gap: 5px; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Case Articles</h1>
+    <h1>Tasks</h1>
 
-    <h3>Add New Article</h3>
-    <div id="createArticle">
+    <h3>Add New Task</h3>
+    <div id="createTask">
         <input id="newTitle" placeholder="Title">
         <input id="newContent" placeholder="Content">
-        <button onclick="createArticle()">Add</button>
+        <select id="newStatus">
+            <option value="TODO">TODO</option>
+            <option value="INPROGRESS">INPROGRESS</option>
+            <option value="COMPLETED">COMPLETED</option>
+        </select>
+        <input type="date" id="newDueDate">
+        <button onclick="createTask()">Add</button>
         <div id="createError" class="error"></div>
     </div>
 
-    <h3>Existing Articles</h3>
-    <div id="articles"></div>
+    <h3>Existing Tasks</h3>
+    <div id="tasks"></div>
 </div>
 
 <script>
-    async function loadArticles() {
+    async function loadTasks() {
         try {
-            const res = await fetch('/api/articles');
+            const res = await fetch('/api/tasks');
             const data = await res.json();
-            const div = document.getElementById('articles');
+            const div = document.getElementById('tasks');
             div.innerHTML = '';
 
-            data.forEach(article => {
-                const articleDiv = document.createElement('div');
-                articleDiv.className = 'article';
+            data.forEach(task => {
+                const taskDiv = document.createElement('div');
+                taskDiv.className = 'task';
 
-                articleDiv.innerHTML = `
-                    <input type="text" value="${article.title}" id="title-${article.id}">
-                    <input type="text" value="${article.content}" id="content-${article.id}">
-                    <div style="display:flex; gap: 5px;">
-                        <button onclick="updateArticle(${article.id})">Save</button>
-                        <button style="background:#dc3545" onclick="deleteArticle(${article.id})">Delete</button>
+                taskDiv.innerHTML = `
+                    <input type="text" value="${task.title}" id="title-${task.id}">
+                    <input type="text" value="${task.content}" id="content-${task.id}">
+                    <select id="status-${task.id}">
+                        <option value="TODO" ${task.status === 'TODO' ? 'selected' : ''}>TODO</option>
+                        <option value="INPROGRESS" ${task.status === 'INPROGRESS' ? 'selected' : ''}>INPROGRESS</option>
+                        <option value="COMPLETED" ${task.status === 'COMPLETED' ? 'selected' : ''}>COMPLETED</option>
+                    </select>
+                    <input type="date" id="dueDate-${task.id}" value="${task.dueDate}">
+                    <div class="button-group">
+                        <button onclick="updateTask(${task.id})">Save</button>
+                        <button style="background:#dc3545" onclick="deleteTask(${task.id})">Delete</button>
                     </div>
-                    <div class="error" id="error-${article.id}"></div>
+                    <div class="error" id="error-${task.id}"></div>
                 `;
-                div.appendChild(articleDiv);
+                div.appendChild(taskDiv);
             });
         } catch (e) {
-            document.getElementById('articles').innerHTML = '<div class="error">Failed to load articles</div>';
+            document.getElementById('tasks').innerHTML = '<div class="error">Failed to load tasks</div>';
         }
     }
 
-    async function createArticle() {
+    async function createTask() {
         const title = document.getElementById('newTitle').value;
         const content = document.getElementById('newContent').value;
+        const status = document.getElementById('newStatus').value;
+        const dueDate = document.getElementById('newDueDate').value;
         const errorDiv = document.getElementById('createError');
         errorDiv.textContent = '';
 
         try {
-            const res = await fetch('/api/articles', {
+            const res = await fetch('/api/tasks', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({title, content})
+                body: JSON.stringify({title, content, status, dueDate})
             });
 
             const data = await res.json();
             if (!res.ok) {
-                errorDiv.textContent = data.error || 'Error creating article';
+                errorDiv.textContent = data.error || 'Error creating task';
             } else {
                 document.getElementById('newTitle').value = '';
                 document.getElementById('newContent').value = '';
-                loadArticles();
+                document.getElementById('newDueDate').value = '';
+                loadTasks();
             }
         } catch (e) {
             errorDiv.textContent = 'Network error';
         }
     }
 
-    async function updateArticle(id) {
+    async function updateTask(id) {
         const title = document.getElementById('title-' + id).value;
         const content = document.getElementById('content-' + id).value;
+        const status = document.getElementById('status-' + id).value;
+        const dueDate = document.getElementById('dueDate-' + id).value;
         const errorDiv = document.getElementById('error-' + id);
         errorDiv.textContent = '';
 
         try {
-            const res = await fetch('/api/articles/' + id, {
+            const res = await fetch('/api/tasks/' + id, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({title, content})
+                body: JSON.stringify({title, content, status, dueDate})
             });
 
             const data = await res.json();
             if (!res.ok) {
-                errorDiv.textContent = data.error || 'Error updating article';
+                errorDiv.textContent = data.error || 'Error updating task';
             } else {
-                loadArticles();
+                loadTasks();
             }
         } catch (e) {
             errorDiv.textContent = 'Network error';
         }
     }
 
-    async function deleteArticle(id) {
+    async function deleteTask(id) {
         const errorDiv = document.getElementById('error-' + id);
         errorDiv.textContent = '';
 
         try {
-            const res = await fetch('/api/articles/' + id, { method: 'DELETE' });
+            const res = await fetch('/api/tasks/' + id, { method: 'DELETE' });
             if (!res.ok) {
                 const data = await res.json();
-                errorDiv.textContent = data.error || 'Error deleting article';
+                errorDiv.textContent = data.error || 'Error deleting task';
             } else {
-                loadArticles();
+                loadTasks();
             }
         } catch (e) {
             errorDiv.textContent = 'Network error';
         }
     }
 
-    // Initial load
-    loadArticles();
+    loadTasks();
 </script>
 
 </body>

@@ -1,42 +1,42 @@
 package com.cb.coaless.repo;
 
-import com.cb.coaless.model.Article;
+import com.cb.coaless.model.Task;
 import jakarta.persistence.EntityManager;
 
 import java.util.List;
 
-public class ArticleRepository {
+public class TaskRepository {
 
     private final EntityManager em;
 
-    public ArticleRepository(EntityManager em) {
+    public TaskRepository(EntityManager em) {
         this.em = em;
     }
 
-    public List<Article> findAll() {
-        return em.createQuery("SELECT a FROM Article a", Article.class)
+    public List<Task> findAll() {
+        return em.createQuery("SELECT a FROM Task a", Task.class)
                 .getResultList();
     }
 
-    public Article findById(Long id) {
-        return em.find(Article.class, id);
+    public Task findById(Long id) {
+        return em.find(Task.class, id);
     }
 
-    public void save(Article article) {
+    public void save(Task task) {
         em.getTransaction().begin();
-        em.persist(article);
+        em.persist(task);
         em.getTransaction().commit();
     }
 
-    public void update(Article article) {
+    public void update(Task task) {
         em.getTransaction().begin();
-        em.merge(article);
+        em.merge(task);
         em.getTransaction().commit();
     }
 
     public void delete(Long id) {
         em.getTransaction().begin();
-        Article a = em.find(Article.class, id);
+        Task a = em.find(Task.class, id);
         if (a != null) em.remove(a);
         em.getTransaction().commit();
     }
