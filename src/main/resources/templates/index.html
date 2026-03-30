@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Case Articles SPA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f9f9f9;
+            color: #333;
+        }
+        h1, h3 {
+            color: #444;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .article {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        .article input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .article button {
+            padding: 6px 12px;
+            margin-top: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .article button:hover {
+            background: #0056b3;
+        }
+        #createArticle input {
+            margin-right: 5px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        #createArticle button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        #createArticle button:hover {
+            background: #1e7e34;
+        }
+        .error {
+            color: red;
+            font-size: 0.85em;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Case Articles</h1>
+
+    <h3>Add New Article</h3>
+    <div id="createArticle">
+        <input id="newTitle" placeholder="Title">
+        <input id="newContent" placeholder="Content">
+        <button onclick="createArticle()">Add</button>
+        <div id="createError" class="error"></div>
+    </div>
+
+    <h3>Existing Articles</h3>
+    <div id="articles"></div>
+</div>
+
+<script>
+    async function loadArticles() {
+        try {
+            const res = await fetch('/api/articles');
+            const data = await res.json();
+            const div = document.getElementById('articles');
+            div.innerHTML = '';
+
+            data.forEach(article => {
+                const articleDiv = document.createElement('div');
+                articleDiv.className = 'article';
+
+                articleDiv.innerHTML = `
+                    <input type="text" value="${article.title}" id="title-${article.id}">
+                    <input type="text" value="${article.content}" id="content-${article.id}">
+                    <div style="display:flex; gap: 5px;">
+                        <button onclick="updateArticle(${article.id})">Save</button>
+                        <button style="background:#dc3545" onclick="deleteArticle(${article.id})">Delete</button>
+                    </div>
+                    <div class="error" id="error-${article.id}"></div>
+                `;
+                div.appendChild(articleDiv);
+            });
+        } catch (e) {
+            document.getElementById('articles').innerHTML = '<div class="error">Failed to load articles</div>';
+        }
+    }
+
+    async function createArticle() {
+        const title = document.getElementById('newTitle').value;
+        const content = document.getElementById('newContent').value;
+        const errorDiv = document.getElementById('createError');
+        errorDiv.textContent = '';
+
+        try {
+            const res = await fetch('/api/articles', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({title, content})
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                errorDiv.textContent = data.error || 'Error creating article';
+            } else {
+                document.getElementById('newTitle').value = '';
+                document.getElementById('newContent').value = '';
+                loadArticles();
+            }
+        } catch (e) {
+            errorDiv.textContent = 'Network error';
+        }
+    }
+
+    async function updateArticle(id) {
+        const title = document.getElementById('title-' + id).value;
+        const content = document.getElementById('content-' + id).value;
+        const errorDiv = document.getElementById('error-' + id);
+        errorDiv.textContent = '';
+
+        try {
+            const res = await fetch('/api/articles/' + id, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({title, content})
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                errorDiv.textContent = data.error || 'Error updating article';
+            } else {
+                loadArticles();
+            }
+        } catch (e) {
+            errorDiv.textContent = 'Network error';
+        }
+    }
+
+    async function deleteArticle(id) {
+        const errorDiv = document.getElementById('error-' + id);
+        errorDiv.textContent = '';
+
+        try {
+            const res = await fetch('/api/articles/' + id, { method: 'DELETE' });
+            if (!res.ok) {
+                const data = await res.json();
+                errorDiv.textContent = data.error || 'Error deleting article';
+            } else {
+                loadArticles();
+            }
+        } catch (e) {
+            errorDiv.textContent = 'Network error';
+        }
+    }
+
+    // Initial load
+    loadArticles();
+</script>
+
+</body>
+</html>
