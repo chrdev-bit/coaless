@@ -17,25 +17,46 @@ public class TaskController {
         return repo.findAll();
     }
 
+    public void delete(Long id) {
+        repo.delete(id);
+    }
+
     public Task create(Task task) {
-        repo.save(task);
-        return task;
+        validate(task);
+        return repo.save(task);
     }
 
     public Task update(Long id, Task updated) {
         Task existing = repo.findById(id);
-        if (existing == null) return null;
+        if (existing == null) {
+            throw new RuntimeException("Task not found");
+        }
+
+        validate(updated);
 
         existing.setTitle(updated.getTitle());
         existing.setContent(updated.getContent());
         existing.setStatus(updated.getStatus());
         existing.setDueDate(updated.getDueDate());
 
-        repo.update(existing);
-        return existing;
+        return repo.save(existing);
+
     }
 
-    public void delete(Long id) {
-        repo.delete(id);
+    public Task getById(Long id) {
+        Task task = repo.findById(id);
+        if (task == null) {
+            throw new RuntimeException("Task not found");
+        }
+        return task;
+    }
+
+    private void validate(Task task) {
+        if (task.getTitle() == null || task.getTitle().isBlank()) {
+            throw new IllegalArgumentException("Title is required");
+        }
+        if (task.getStatus() == null) {
+            throw new IllegalArgumentException("Status is required");
+        }
     }
 }

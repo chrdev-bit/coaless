@@ -1,10 +1,10 @@
 package com.cb.coaless.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Date;
-import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
 @Table(name = "tasks")

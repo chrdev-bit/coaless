@@ -4,17 +4,14 @@ import com.cb.coaless.model.Task;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.HibernatePersistenceProvider;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Environment;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class JPAUtil {

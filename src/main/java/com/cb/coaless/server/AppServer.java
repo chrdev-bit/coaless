@@ -5,12 +5,13 @@ import com.cb.coaless.db.JPAUtil;
 import com.cb.coaless.model.Task;
 import com.cb.coaless.repo.TaskRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpExchange;
-
+import com.sun.net.httpserver.HttpServer;
 import jakarta.persistence.EntityManager;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
@@ -30,6 +31,37 @@ public class AppServer {
 
         server.createContext("/api/tasks", this::tasksHandler);
         server.createContext("/", this::spaHandler);
+        server.createContext("/swagger-ui", exchange -> {
+            String path = exchange.getRequestURI().getPath();
+            System.out.println("path:"+path);
+            if (path.isEmpty() || path.equals("/")) path = "/swagger-ui/index.html";
+
+            InputStream is = getClass().getClassLoader().getResourceAsStream(path.substring(1));
+            if (is == null) {
+                exchange.sendResponseHeaders(404, -1);
+                return;
+            }
+
+            byte[] bytes = is.readAllBytes();
+            String contentType = "text/html";
+            if (path.endsWith(".js")) contentType = "application/javascript";
+            else if (path.endsWith(".css")) contentType = "text/css";
+            else if (path.endsWith(".png")) contentType = "image/png";
+
+            exchange.getResponseHeaders().set("Content-Type", contentType);
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.getResponseBody().close();
+        });
+        server.createContext("/swagger.json", exchange -> {
+            InputStream is = getClass().getClassLoader().getResourceAsStream("swagger.json");
+            byte[] bytes = is.readAllBytes();
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.getResponseBody().close();
+        });
+
 
         server.start();
     }
@@ -61,6 +93,19 @@ public class AppServer {
                 if ("GET".equalsIgnoreCase(method) && path.equals("/api/tasks")) {
                     List<Task> tasks = controller.getAll();
                     response = mapper.writeValueAsString(tasks);
+
+                }else if ("GET".equalsIgnoreCase(method) && path.matches("/api/tasks/\\d+")) {
+
+                        Long id = Long.parseLong(path.split("/")[3]);
+
+                        Task task = controller.getById(id);
+
+                        if (task == null) {
+                            sendJsonError(exchange, 404, "Task not found");
+                            return;
+                        }
+
+                        response = mapper.writeValueAsString(task);
 
                 } else if ("POST".equalsIgnoreCase(method) && path.equals("/api/tasks")) {
                     InputStream is = exchange.getRequestBody();

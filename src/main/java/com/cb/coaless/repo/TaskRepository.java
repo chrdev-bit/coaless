@@ -22,10 +22,11 @@ public class TaskRepository {
         return em.find(Task.class, id);
     }
 
-    public void save(Task task) {
+    public Task save(Task task) {
         em.getTransaction().begin();
         em.persist(task);
         em.getTransaction().commit();
+        return task;
     }
 
     public void update(Task task) {

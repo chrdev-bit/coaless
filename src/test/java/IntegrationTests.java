@@ -1,8 +1,8 @@
-package com.cb.coaless.server;
+package com.cb.coaless.tests;
 
 import com.cb.coaless.model.Task;
 import com.cb.coaless.model.Task.Status;
-
+import com.cb.coaless.server.AppServer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class Tests {
+public class IntegrationTests {
 
     private AppServer server;
     private final ObjectMapper mapper = new ObjectMapper();
