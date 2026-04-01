@@ -4,5 +4,5 @@ A lightweight Java microservice for managing tasks, using JPA/Hibernate,
 HikariCP connection pooling, and a layered architecture. 
 Designed as a single microservice that can serve a SPA frontend via RESTful endpoints.
 
-To build: mvn clean test package
+To build: mvn clean test package<p/>
 To run: java -jar target/tasks-spa-1.0-SNAPSHOT.jar
