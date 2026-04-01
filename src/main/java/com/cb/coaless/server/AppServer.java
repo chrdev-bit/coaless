@@ -14,18 +14,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class AppServer {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     public void start(int port) throws IOException {
-
+        mapper.registerModule(new JavaTimeModule());
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.setExecutor(java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor());
 
@@ -79,8 +79,7 @@ public class AppServer {
                 task.setTitle("Test Task");
                 task.setContent("Test task description");
                 task.setStatus(Task.Status.TODO);
-                LocalDate localDue = LocalDate.now().plusDays(7);
-                task.setDueDate(Date.valueOf(localDue));
+                task.setDueDate(LocalDate.now().plusDays(7));
                 repo.save(task);
             }
 

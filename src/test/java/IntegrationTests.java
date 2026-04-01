@@ -14,7 +14,7 @@ import java.net.URL;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
-
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -27,6 +27,7 @@ public class IntegrationTests {
 
     @BeforeAll
     void startServer() throws Exception {
+        mapper.registerModule(new JavaTimeModule());
         server = new AppServer();
         server.start(PORT);
     }
@@ -49,7 +50,7 @@ public class IntegrationTests {
         task.setTitle("To Update");
         task.setContent("Old Content");
         task.setStatus(Status.TODO);
-        task.setDueDate(Date.valueOf(LocalDate.now()));
+        task.setDueDate(LocalDate.now());
 
         HttpURLConnection conn = (HttpURLConnection) new URL(baseUrl("/api/tasks")).openConnection();
         conn.setRequestMethod("POST");
